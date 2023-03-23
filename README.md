@@ -1,1 +1,1 @@
-# flutter-productsearch-sdk
+# visenze_productsearch_sdk
