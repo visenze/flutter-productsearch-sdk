@@ -29,16 +29,20 @@ class ProductSearchClient {
     Map<String, dynamic> params = _getCommonParams();
     params.addAll(_getAuthParams());
     params.addAll(searchParams);
-    params = params.map((key, value) => MapEntry(key, value.toString()));
 
-    Map<String, dynamic> body = {};
+    http.Response response;
+
     if (params['image'] != null) {
-      body['image'] = params['image'];
+      dynamic file = params['image'];
+      params.remove('image');
+      params = params.map((key, value) => MapEntry(key, value.toString()));
+      Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
+      response = await _uploadPost(uri, file);
+    } else {
+      params = params.map((key, value) => MapEntry(key, value.toString()));
+      Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
+      response = await _post(uri);
     }
-
-    params = params.map((key, value) => MapEntry(key, value.toString()));
-    Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
-    var response = await _post(uri, body);
     _sendResultLoadEvent(response);
     return response;
   }
@@ -93,10 +97,20 @@ class ProductSearchClient {
     return response;
   }
 
-  Future<http.Response> _post(Uri uri, Map<String, dynamic> body) async {
-    var response = await http
-        .post(uri, body: body)
-        .timeout(Duration(milliseconds: _timeoutInMs));
+  Future<http.Response> _post(Uri uri) async {
+    var response =
+        await http.post(uri).timeout(Duration(milliseconds: _timeoutInMs));
     return response;
+  }
+
+  Future<http.Response> _uploadPost(Uri uri, dynamic objFile) async {
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(http.MultipartFile(
+        'image', objFile.readStream, objFile.size,
+        filename: objFile.name));
+
+    var response =
+        await request.send().timeout(Duration(milliseconds: _timeoutInMs));
+    return http.Response.fromStream(response);
   }
 }

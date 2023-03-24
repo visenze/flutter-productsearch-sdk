@@ -59,7 +59,7 @@ Searching by Image can happen in three different ways - by url, id or File.
 
   ```dart
   var body = {
-    image: imageFile
+    image: imageObjFile
   };
 
   var response = await psClient.productSearchByImage(params);
