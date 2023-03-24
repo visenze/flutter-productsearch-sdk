@@ -32,3 +32,5 @@ build/
 # Generated flutter files
 .flutter-plugins
 .flutter-plugins-dependencies
+
+example/
