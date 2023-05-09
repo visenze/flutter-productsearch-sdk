@@ -26,7 +26,8 @@ class MyAppState extends State<MyApp> {
   final TextEditingController _paramsController =
       TextEditingController(text: '{"pid": "Test PID", "queryId": "1234"}');
 
-  late VisenzeProductSearch psClient;
+  late VisenzeProductSearch psSearchClient;
+  late VisenzeProductSearch psRecClient;
   FilePickerResult? _fileResult;
   String? _fileName;
 
@@ -38,15 +39,17 @@ class MyAppState extends State<MyApp> {
 
   // Factory is asynchronous, so we put it in an async method.
   void initPS() async {
-    psClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
+    psSearchClient =
+        await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
+    psRecClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
     setState(() {
-      _sid = psClient.sessionId;
-      _uid = psClient.userId;
+      _sid = psSearchClient.sessionId;
+      _uid = psSearchClient.userId;
     });
   }
 
   void _searchById() async {
-    var response = await psClient.productSearchById(_pidController.text);
+    var response = await psRecClient.productSearchById(_pidController.text);
     setState(() {
       _recRequestResult = response.body;
     });
@@ -54,7 +57,7 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgUrl() async {
     Map<String, dynamic> params = {'im_url': _imgUrlController.text};
-    var response = await psClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(params);
     setState(() {
       _searchRequestResult = response.body;
     });
@@ -62,7 +65,7 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgId() async {
     Map<String, dynamic> params = {'im_id': _imgIdController.text};
-    var response = await psClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(params);
     setState(() {
       _searchRequestResult = response.body;
     });
@@ -71,7 +74,7 @@ class MyAppState extends State<MyApp> {
   void _searchByImg() async {
     if (_fileResult != null) {
       Map<String, dynamic> params = {'image': _fileResult!.files.single};
-      var response = await psClient.productSearchByImage(params);
+      var response = await psSearchClient.productSearchByImage(params);
       setState(() {
         _searchRequestResult = response.body;
       });
@@ -100,9 +103,9 @@ class MyAppState extends State<MyApp> {
   }
 
   void _resetSession() async {
-    psClient.resetSession();
+    psSearchClient.resetSession();
     setState(() {
-      _sid = psClient.sessionId;
+      _sid = psSearchClient.sessionId;
     });
   }
 
@@ -120,7 +123,7 @@ class MyAppState extends State<MyApp> {
 
   Future<void> _sendEvent() async {
     try {
-      await psClient.sendEvent(
+      await psSearchClient.sendEvent(
           _eventController.text, jsonDecode(_paramsController.text));
       _onRequestSuccess();
     } catch (err) {
