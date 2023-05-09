@@ -7,7 +7,7 @@ documentation: https://github.com/visenze/flutter-productsearch-sdk/
 issue_tracker: https://github.com/visenze/flutter-productsearch-sdk/issues
 
 environment:
-  sdk: '>=2.19.4 <3.0.0'
+  sdk: ">=2.19.4 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
@@ -15,7 +15,7 @@ dependencies:
     sdk: flutter
   http: ^0.13.5
   shared_preferences: ^2.0.18
-  visenze_tracking_sdk: ^0.0.3
+  visenze_tracking_sdk: ^0.0.4-dev.1
 
 dev_dependencies:
   flutter_test:

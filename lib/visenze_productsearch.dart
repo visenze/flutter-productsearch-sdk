@@ -26,26 +26,40 @@ class VisenzeProductSearch {
 
   /// Get the current session id
   String get sessionId {
-    return _tracker.getSessionId();
+    return _tracker.sessionId;
   }
 
   /// Get the current user id
   String get userId {
-    return _tracker.getUserId();
+    return _tracker.userId;
   }
 
   /// Set the current user id to the provided [uid]
   set userId(String uid) {
-    return _tracker.setUserId(uid);
+    _tracker.userId = uid;
+  }
+
+  /// Reset the current session and return the new session id
+  String resetSession() {
+    return _tracker.resetSession();
+  }
+
+  String? get lastSuccessQueryId {
+    return _client.lastSuccessQueryId;
   }
 
   /// Send a request to ViSenze analytics server with event name [action] and provided [queryParams]
-  ///
-  /// Execute [onSuccess] on request success and [onError] on request error
-  Future<void> sendEvent(String action, Map<String, dynamic> queryParams,
-      {void Function()? onSuccess, void Function(String err)? onError}) async {
-    _tracker.sendEvent(action, queryParams,
-        onSuccess: onSuccess, onError: onError);
+  Future<void> sendEvent(
+      String action, Map<String, dynamic> queryParams) async {
+    final params = {...queryParams}..addAll(_client.getCommonParams());
+    await _tracker.sendEvent(action, params);
+  }
+
+  /// Send a request to ViSenze analytics server with event name [action] and provided params list [queryParamsList]
+  void sendEvents(String action, List<Map<String, dynamic>> queryParamsList) {
+    for (final params in queryParamsList) {
+      sendEvent(action, params);
+    }
   }
 
   /// Do an image search with params [searchParams]
@@ -64,7 +78,7 @@ class VisenzeProductSearch {
 
   Future<void> _init({String? uid, bool? useStaging, int? timeout}) async {
     _tracker = await VisenzeTracker.create('$_appKey:$_placementId', uid: uid);
-    _client = ProductSearchClient(_appKey, _placementId, _tracker,
+    _client = await ProductSearchClient.create(_appKey, _placementId, _tracker,
         useStaging: useStaging, timeout: timeout);
   }
 }
