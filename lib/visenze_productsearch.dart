@@ -56,10 +56,13 @@ class VisenzeProductSearch {
   }
 
   /// Send a request to ViSenze analytics server with event name [action] and provided params list [queryParamsList]
-  void sendEvents(String action, List<Map<String, dynamic>> queryParamsList) {
-    for (final params in queryParamsList) {
-      sendEvent(action, params);
+  Future<void> sendEvents(
+      String action, List<Map<String, dynamic>> queryParamsList) async {
+    final List<Map<String, dynamic>> paramsList = [];
+    for (final queryParams in queryParamsList) {
+      paramsList.add({...queryParams}..addAll(_client.getCommonParams()));
     }
+    await _tracker.sendEvents(action, paramsList);
   }
 
   /// Do an image search with params [searchParams]
