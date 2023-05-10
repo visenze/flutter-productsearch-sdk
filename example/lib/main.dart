@@ -22,9 +22,12 @@ class MyAppState extends State<MyApp> {
   final TextEditingController _imgUrlController = TextEditingController();
   final TextEditingController _imgIdController = TextEditingController();
   final TextEditingController _eventController =
-      TextEditingController(text: 'product_click');
-  final TextEditingController _paramsController =
-      TextEditingController(text: '{"pid": "Test PID", "queryId": "1234"}');
+      TextEditingController(text: 'transaction');
+  final TextEditingController _paramsController = TextEditingController(
+      text: '{"pid": "PID_1", "queryId": "1234", "value": 50}');
+  final TextEditingController _paramsListController = TextEditingController(
+      text:
+          '[{"pid": "PID_1", "queryId": "1234", "value": 50}, {"pid": "PID_2", "queryId": "1234", "value": 100}]');
 
   late VisenzeProductSearch psSearchClient;
   late VisenzeProductSearch psRecClient;
@@ -125,6 +128,18 @@ class MyAppState extends State<MyApp> {
     try {
       await psSearchClient.sendEvent(
           _eventController.text, jsonDecode(_paramsController.text));
+      _onRequestSuccess();
+    } catch (err) {
+      _onRequestError(err);
+    }
+  }
+
+  Future<void> _sendBatchEvent() async {
+    try {
+      List<dynamic> params = jsonDecode(_paramsListController.text)
+          .map((element) => element as Map<String, dynamic>)
+          .toList();
+      await psSearchClient.sendEvents(_eventController.text, params);
       _onRequestSuccess();
     } catch (err) {
       _onRequestError(err);
@@ -248,6 +263,17 @@ class MyAppState extends State<MyApp> {
                   const Padding(padding: EdgeInsets.all(4)),
                   ElevatedButton(
                       onPressed: _sendEvent, child: const Text('Send event')),
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: "Event list params",
+                    ),
+                    controller: _paramsListController,
+                  ),
+                  const Padding(padding: EdgeInsets.all(4)),
+                  ElevatedButton(
+                      onPressed: _sendBatchEvent,
+                      child: const Text('Send batch event')),
+                  const Padding(padding: EdgeInsets.all(4)),
                   Text(_trackingRequestResult),
                 ],
               ),

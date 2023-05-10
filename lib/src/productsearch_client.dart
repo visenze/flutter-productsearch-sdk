@@ -88,16 +88,21 @@ class ProductSearchClient {
 
   bool _isResponseSuccess(http.Response response) {
     final resp = jsonDecode(response.body);
-    return response.statusCode == 200 &&
-        ((resp['result'] != null && resp['result'].length > 0) ||
-            (resp['objects'] != null && resp['objects'].length > 0));
+    return response.statusCode == 200 && resp['status'] == 'OK';
+  }
+
+  bool _isResponseHasResults(dynamic resp) {
+    return (resp['result'] != null && resp['result'].length > 0) ||
+        (resp['objects'] != null && resp['objects'].length > 0);
   }
 
   /// Send a result load
   void _onSearchCompleted(http.Response response, [String? pid]) {
     if (_isResponseSuccess(response)) {
       final resp = jsonDecode(response.body);
-      _sendResultLoadEvent(resp['reqid'], pid);
+      if (_isResponseHasResults(resp)) {
+        _sendResultLoadEvent(resp['reqid'], pid);
+      }
       _saveReqid(resp['reqid']);
     }
   }
