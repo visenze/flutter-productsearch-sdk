@@ -41,6 +41,16 @@ void main() {
         expect(psClient.sessionId, isNot(savedSid));
       });
     });
+
+    test('resets after user reset', () {
+      fakeAsync((fakeTime) async {
+        var psClient = await VisenzeProductSearch.create(appKey, placementId);
+        fakeTime.elapse(const Duration(milliseconds: 100));
+        String savedSid = psClient.sessionId;
+        psClient.resetSession();
+        expect(psClient.sessionId, isNot(savedSid));
+      });
+    });
   });
 
   group('UID', () {

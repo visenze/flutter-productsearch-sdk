@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:visenze_tracking_sdk/visenze_tracker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:clock/clock.dart';
 
 class ProductSearchClient {
   static const String _endpoint = 'search.visenze.com';
@@ -22,26 +23,28 @@ class ProductSearchClient {
   late final int _timeoutInMs;
   late final bool _useStaging;
   late final SharedPreferences _prefs;
+  late final http.Client _httpClient;
 
-  static Future<ProductSearchClient> create(
+  static Future<ProductSearchClient> create(http.Client httpClient,
       String appKey, String placementId, VisenzeTracker tracker,
       {bool? useStaging, int? timeout}) async {
-    var client = ProductSearchClient(appKey, placementId, tracker,
+    final client = ProductSearchClient(httpClient, appKey, placementId, tracker,
         useStaging: useStaging, timeout: timeout);
     await client._init();
     return client;
   }
 
-  ProductSearchClient(this._appKey, this._placementId, this._tracker,
+  ProductSearchClient(
+      this._httpClient, this._appKey, this._placementId, this._tracker,
       {bool? useStaging, int? timeout}) {
     _timeoutInMs = timeout ?? _defaultTimeout;
     _useStaging = useStaging ?? false;
   }
 
   Future<http.Response> imageSearch(Map<String, dynamic> searchParams) async {
-    Map<String, dynamic> params = getCommonParams();
+    Map<String, dynamic> params = {...searchParams};
+    params.addAll(getCommonParams());
     params.addAll(_getAuthParams());
-    params.addAll(searchParams);
 
     http.Response response;
 
@@ -62,9 +65,10 @@ class ProductSearchClient {
 
   Future<http.Response> idSearch(
       String pid, Map<String, dynamic>? requestParams) async {
-    Map<String, dynamic> params = getCommonParams();
+    Map<String, dynamic> params =
+        requestParams != null ? {...requestParams} : {};
+    params.addAll(getCommonParams());
     params.addAll(_getAuthParams());
-    params.addAll(requestParams ?? {});
     params = params.map((key, value) => MapEntry(key, value.toString()));
     Uri uri = Uri.https(_getEndpoint(), '$_pathRec/$pid', params);
     var response = await _get(uri);
@@ -74,7 +78,7 @@ class ProductSearchClient {
 
   Map<String, dynamic> getCommonParams() {
     return {
-      'ts': DateTime.now().millisecondsSinceEpoch,
+      'ts': clock.now().millisecondsSinceEpoch,
       'va_sdk': _sdk,
       'va_sdk_version': _version,
       'va_uid': _tracker.userId,
@@ -131,14 +135,16 @@ class ProductSearchClient {
   }
 
   Future<http.Response> _get(Uri uri) async {
-    var response =
-        await http.get(uri).timeout(Duration(milliseconds: _timeoutInMs));
+    var response = await _httpClient
+        .get(uri)
+        .timeout(Duration(milliseconds: _timeoutInMs));
     return response;
   }
 
   Future<http.Response> _post(Uri uri) async {
-    var response =
-        await http.post(uri).timeout(Duration(milliseconds: _timeoutInMs));
+    var response = await _httpClient
+        .post(uri)
+        .timeout(Duration(milliseconds: _timeoutInMs));
     return response;
   }
 
