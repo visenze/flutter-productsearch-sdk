@@ -43,10 +43,8 @@ void main() {
     test('resets after user reset', () async {
       var psClient = await VisenzeProductSearch.create(appKey, placementId);
       String savedSid = psClient.sessionId;
-      fakeAsync((fakeTime) async {
-        psClient.resetSession();
-        expect(psClient.sessionId, isNot(savedSid));
-      });
+      psClient.resetSession();
+      expect(psClient.sessionId, isNot(savedSid));
     });
   });
 
