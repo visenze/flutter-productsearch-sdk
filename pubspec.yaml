@@ -16,11 +16,14 @@ dependencies:
   http: ^0.13.5
   shared_preferences: ^2.0.18
   visenze_tracking_sdk: ^0.0.4-dev.1
+  clock: ^1.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
   fake_async: ^1.3.1
+  mockito: ^5.4.0
+  build_runner: ^2.3.3
 
 flutter:

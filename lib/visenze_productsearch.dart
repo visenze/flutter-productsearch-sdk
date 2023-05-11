@@ -1,6 +1,6 @@
 library visenze_productsearch_sdk;
 
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:visenze_productsearch_sdk/src/productsearch_client.dart';
 import 'package:visenze_tracking_sdk/visenze_tracker.dart';
 
@@ -66,13 +66,13 @@ class VisenzeProductSearch {
   }
 
   /// Do an image search with params [searchParams]
-  Future<Response> productSearchByImage(
+  Future<http.Response> productSearchByImage(
       Map<String, dynamic> searchParams) async {
     return await _client.imageSearch(searchParams);
   }
 
   /// Do a recommendation search with product id [pid] and optional params [recParams]
-  Future<Response> productSearchById(String pid,
+  Future<http.Response> productSearchById(String pid,
       [Map<String, dynamic>? recParams]) async {
     return await _client.idSearch(pid, recParams);
   }
@@ -81,7 +81,8 @@ class VisenzeProductSearch {
 
   Future<void> _init({String? uid, bool? useStaging, int? timeout}) async {
     _tracker = await VisenzeTracker.create('$_appKey:$_placementId', uid: uid);
-    _client = await ProductSearchClient.create(_appKey, _placementId, _tracker,
+    _client = await ProductSearchClient.create(
+        http.Client(), _appKey, _placementId, _tracker,
         useStaging: useStaging, timeout: timeout);
   }
 }
