@@ -44,6 +44,7 @@ class VisenzeProductSearch {
     return _tracker.resetSession();
   }
 
+  /// Get the query id of the last successful search request
   String? get lastSuccessQueryId {
     return _client.lastSuccessQueryId;
   }
