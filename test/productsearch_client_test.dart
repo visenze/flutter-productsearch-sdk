@@ -1,5 +1,6 @@
+import 'dart:convert';
+
 import 'package:clock/clock.dart';
-import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
@@ -47,67 +48,67 @@ void main() {
   });
 
   group('search', () {
-    test('search success no result', () async {
+    test('success with no result', () {
       final searchParams = {'limit': 1};
       final uri = Uri.parse(
-          'https://search.visenze.com/v1/product/recommendations/pid?ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version-dev.1&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123&limit=1');
-      when(httpClient.get(uri)).thenAnswer((_) async => http.Response(
+          'https://search.visenze.com/v1/product/recommendations/pid?limit=1&ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123');
+      when(httpClient.get(any)).thenAnswer((_) async => http.Response(
           '{"reqid": "1234", "status": "OK", "result": []}', 200));
-
       withClock(
         Clock.fixed(DateTime.fromMillisecondsSinceEpoch(mockTime)),
-        () {
-          fakeAsync((fakeTime) async {
-            psClient.idSearch(mockPid, searchParams);
-            verify(httpClient.get(uri));
-            verify(va.sendEvent('result_load', any)).called(0);
+        () async {
+          final resp = await psClient.idSearch(mockPid, searchParams);
+          final respBody = jsonDecode(resp.body);
 
-            fakeTime.elapse(const Duration(milliseconds: 100));
-            expect(psClient.lastSuccessQueryId, equals('1234'));
-          });
+          verify(httpClient.get(uri)).called(1);
+          expect(respBody['reqid'], equals('1234'));
+          expect(respBody['result'].length, equals(0));
+          verifyNever(va.sendEvent('result_load', any));
+          expect(psClient.lastSuccessQueryId, equals('1234'));
         },
       );
     });
 
-    test('search success with result', () async {
+    test('success with result', () {
       final searchParams = {'limit': 1};
       final uri = Uri.parse(
-          'https://search.visenze.com/v1/product/recommendations/pid2?ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version-dev.1&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123&limit=1');
+          'https://search.visenze.com/v1/product/recommendations/pid2?limit=1&ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123');
       when(httpClient.get(uri)).thenAnswer((_) async => http.Response(
           '{"reqid": "12345", "status": "OK", "result": [{"pid": "12345"}]}',
           200));
 
       withClock(
         Clock.fixed(DateTime.fromMillisecondsSinceEpoch(mockTime)),
-        () {
-          fakeAsync((fakeTime) async {
-            psClient.idSearch(mockPid2, searchParams);
-            verify(httpClient.get(uri)).called(1);
-            verify(va.sendEvent('result_load', any)).called(1);
+        () async {
+          final resp = await psClient.idSearch(mockPid2, searchParams);
+          final respBody = jsonDecode(resp.body);
 
-            fakeTime.elapse(const Duration(milliseconds: 100));
-            expect(psClient.lastSuccessQueryId, equals('12345'));
-          });
+          verify(httpClient.get(uri)).called(1);
+          expect(respBody['reqid'], equals('12345'));
+          expect(respBody['result'].length, equals(1));
+          verify(va.sendEvent('result_load', any)).called(1);
+          expect(psClient.lastSuccessQueryId, equals('12345'));
         },
       );
     });
 
-    test('search error', () async {
+    test('error', () {
       final searchParams = {'limit': 1};
       final uri = Uri.parse(
-          'https://search.visenze.com/v1/product/recommendations/pid?ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123&limit=1');
+          'https://search.visenze.com/v1/product/recommendations/pid?limit=1&ts=123456789&va_sdk=flutter_sdk&va_sdk_version=$version&va_uid=uid&va_sid=1234.5678&app_key=abc&placement_id=123');
       when(httpClient.get(uri)).thenAnswer((_) async => http.Response(
           '{"reqid": "1234", "status": "fail", "result": []}', 401));
 
       withClock(
         Clock.fixed(DateTime.fromMillisecondsSinceEpoch(mockTime)),
-        () {
-          fakeAsync((fakeTime) async {
-            psClient.idSearch(mockPid, searchParams);
-            verify(httpClient.get(uri)).called(1);
-            verify(va.sendEvent(any, any)).called(0);
-            expect(psClient.lastSuccessQueryId, isNull);
-          });
+        () async {
+          final resp = await psClient.idSearch(mockPid, searchParams);
+          final respBody = jsonDecode(resp.body);
+
+          expect(respBody['status'], equals('fail'));
+          verify(httpClient.get(uri)).called(1);
+          verifyNever(va.sendEvent(any, any));
+          expect(psClient.lastSuccessQueryId, isNull);
         },
       );
     });

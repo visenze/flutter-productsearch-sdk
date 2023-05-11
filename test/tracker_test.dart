@@ -31,22 +31,19 @@ void main() {
       expect(tracker2.sessionId, equals(savedSid));
     });
 
-    test('resets after timeout', () {
+    test('resets after timeout', () async {
+      var psClient = await VisenzeProductSearch.create(appKey, placementId);
+      var savedSid = psClient.sessionId;
       fakeAsync((fakeTime) async {
-        var psClient = await VisenzeProductSearch.create(appKey, placementId);
-        fakeTime.elapse(const Duration(milliseconds: 100));
-        String savedSid = psClient.sessionId;
-
         fakeTime.elapse(const Duration(milliseconds: 1800000));
         expect(psClient.sessionId, isNot(savedSid));
       });
     });
 
-    test('resets after user reset', () {
+    test('resets after user reset', () async {
+      var psClient = await VisenzeProductSearch.create(appKey, placementId);
+      String savedSid = psClient.sessionId;
       fakeAsync((fakeTime) async {
-        var psClient = await VisenzeProductSearch.create(appKey, placementId);
-        fakeTime.elapse(const Duration(milliseconds: 100));
-        String savedSid = psClient.sessionId;
         psClient.resetSession();
         expect(psClient.sessionId, isNot(savedSid));
       });

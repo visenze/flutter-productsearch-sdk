@@ -59,7 +59,7 @@ class ProductSearchClient {
       Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
       response = await _post(uri);
     }
-    _onSearchCompleted(response);
+    await _onSearchCompleted(response);
     return response;
   }
 
@@ -72,7 +72,7 @@ class ProductSearchClient {
     params = params.map((key, value) => MapEntry(key, value.toString()));
     Uri uri = Uri.https(_getEndpoint(), '$_pathRec/$pid', params);
     var response = await _get(uri);
-    _onSearchCompleted(response, pid);
+    await _onSearchCompleted(response, pid);
     return response;
   }
 
@@ -101,29 +101,29 @@ class ProductSearchClient {
   }
 
   /// Send a result load
-  void _onSearchCompleted(http.Response response, [String? pid]) {
+  Future<void> _onSearchCompleted(http.Response response, [String? pid]) async {
     if (_isResponseSuccess(response)) {
       final resp = jsonDecode(response.body);
       if (_isResponseHasResults(resp)) {
-        _sendResultLoadEvent(resp['reqid'], pid);
+        await _sendResultLoadEvent(resp['reqid'], pid);
       }
-      _saveReqid(resp['reqid']);
+      await _saveReqid(resp['reqid']);
     }
   }
 
   /// Send result load event for the last success request
-  void _sendResultLoadEvent(String queryId, [String? pid]) {
+  Future<void> _sendResultLoadEvent(String queryId, [String? pid]) async {
     final Map<String, dynamic> params = {'queryId': queryId};
     if (pid != null) {
       params['pid'] = pid;
     }
     params.addAll(getCommonParams());
-    _tracker.sendEvent('result_load', params);
+    await _tracker.sendEvent('result_load', params);
   }
 
   /// Save the query id of the last success request
-  void _saveReqid(String queryId) {
-    _prefs.setString('${_lastReqidKey}_$_placementId', queryId);
+  Future<void> _saveReqid(String queryId) async {
+    await _prefs.setString('$_lastReqidKey$_placementId', queryId);
   }
 
   Map<String, dynamic> _getAuthParams() {
