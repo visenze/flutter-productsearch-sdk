@@ -42,7 +42,7 @@ Searching by Image can happen in three different ways - by url, id or File.
     im_id: 'your-image-id'
   };
 
-  var response = await psClient.productSearchByImage(params);
+  var response = await psClient.productSearchByImage(null, params);
   ```
 
 - Using image url:
@@ -52,7 +52,7 @@ Searching by Image can happen in three different ways - by url, id or File.
     im_url: 'your-image-url'
   };
 
-  var response = await psClient.productSearchByImage(params);
+  var response = await psClient.productSearchByImage(null, params);
   ```
 
 - Using image from gallery:
