@@ -58,7 +58,7 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgUrl() async {
     Map<String, dynamic> params = {'im_url': _imgUrlController.text};
-    var response = await psSearchClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(null, params);
     setState(() {
       _searchRequestResult = response.body;
     });
@@ -66,7 +66,7 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgId() async {
     Map<String, dynamic> params = {'im_id': _imgIdController.text};
-    var response = await psSearchClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(null, params);
     setState(() {
       _searchRequestResult = response.body;
     });
@@ -78,7 +78,7 @@ class MyAppState extends State<MyApp> {
       _fileName = file?.name;
     });
     if (file != null) {
-      _searchByImg();
+      _searchByImg(file);
     }
   }
 
@@ -88,13 +88,13 @@ class MyAppState extends State<MyApp> {
       _fileName = file?.name;
     });
     if (file != null) {
-      _searchByImg();
+      _searchByImg(file);
     }
   }
 
-  void _searchByImg() async {
+  void _searchByImg(file) async {
     if (_fileName != null) {
-      var response = await psSearchClient.productSearchByImage({});
+      var response = await psSearchClient.productSearchByImage(file, {});
       setState(() {
         _searchRequestResult = response.body;
       });

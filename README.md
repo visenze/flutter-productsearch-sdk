@@ -59,15 +59,21 @@ Searching by Image can happen in three different ways - by url, id or File.
 
   ```dart
   var image = await psClient.uploadImage();
-  var response = await psClient.productSearchByImage(params);
+  if (image != null) {
+    var response = await psClient.productSearchByImage(image, params);
+  }
   ```
 
 - Using image from camera capture:
 
   ```dart
   var image = await psClient.captureImage();
-  var response = await psClient.productSearchByImage(params);
+  if (image != null) {
+    var response = await psClient.productSearchByImage(image, params);
+  }
   ```
+
+You can also pass your own image if it's in [XFile](https://pub.dev/packages/image_picker) format.
 
 > Please provide `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` values if you are accessing gallery/camera for image search for iOS devices.
 

@@ -16,8 +16,6 @@ class VisenzeProductSearch {
   late final ProductSearchClient _client;
   late final VisenzeTracker _tracker;
 
-  XFile? _image;
-
   /// Factory for creating [VisenzeProductSearch]
   ///
   /// Require authentication params [appKey] and [placementId]
@@ -75,19 +73,17 @@ class VisenzeProductSearch {
   }
 
   Future<XFile?> captureImage() async {
-    _image = await _picker.pickImage(
+    return await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: _widthLimit,
         maxHeight: _heightLimit);
-    return _image;
   }
 
   Future<XFile?> uploadImage() async {
-    _image = await _picker.pickImage(
+    return _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: _widthLimit,
         maxHeight: _heightLimit);
-    return _image;
   }
 
   /// Send a request to ViSenze analytics server with event name [action] and provided params list [queryParamsList]
@@ -102,8 +98,8 @@ class VisenzeProductSearch {
 
   /// Do an image search with params [searchParams]
   Future<http.Response> productSearchByImage(
-      Map<String, dynamic> searchParams) async {
-    return await _client.imageSearch(_image, searchParams);
+      XFile? image, Map<String, dynamic> searchParams) async {
+    return await _client.imageSearch(image, searchParams);
   }
 
   /// Do a recommendation search with product id [pid] and optional params [recParams]
