@@ -1,14 +1,14 @@
 name: visenze_productsearch_sdk
 description: Flutter plugin for ProductSearch API for ViSenze customers. Created for Flutter iOS, Android and Web apps.
-version: 0.0.1-dev.1
+version: 0.0.1-dev.2
 homepage: https://visenze.com
 repository: https://github.com/visenze/flutter-productsearch-sdk/
 documentation: https://github.com/visenze/flutter-productsearch-sdk/
 issue_tracker: https://github.com/visenze/flutter-productsearch-sdk/issues
 
 environment:
-  sdk: ">=2.19.4 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: '>=2.19.4 <3.0.0'
+  flutter: '>=1.17.0'
 
 dependencies:
   flutter:
@@ -17,6 +17,7 @@ dependencies:
   shared_preferences: ^2.0.18
   visenze_tracking_sdk: ^0.0.4-dev.1
   clock: ^1.1.1
+  image_picker: ^0.8.7
 
 dev_dependencies:
   flutter_test:

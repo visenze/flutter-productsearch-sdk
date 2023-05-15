@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:visenze_productsearch_sdk/visenze_productsearch.dart';
-import 'package:file_picker/file_picker.dart';
 
 void main() => runApp(MyApp());
 
@@ -31,7 +30,6 @@ class MyAppState extends State<MyApp> {
 
   late VisenzeProductSearch psSearchClient;
   late VisenzeProductSearch psRecClient;
-  FilePickerResult? _fileResult;
   String? _fileName;
 
   @override
@@ -60,7 +58,7 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgUrl() async {
     Map<String, dynamic> params = {'im_url': _imgUrlController.text};
-    var response = await psSearchClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(null, params);
     setState(() {
       _searchRequestResult = response.body;
     });
@@ -68,41 +66,39 @@ class MyAppState extends State<MyApp> {
 
   void _searchByImgId() async {
     Map<String, dynamic> params = {'im_id': _imgIdController.text};
-    var response = await psSearchClient.productSearchByImage(params);
+    var response = await psSearchClient.productSearchByImage(null, params);
     setState(() {
       _searchRequestResult = response.body;
     });
   }
 
-  void _searchByImg() async {
-    if (_fileResult != null) {
-      Map<String, dynamic> params = {'image': _fileResult!.files.single};
-      var response = await psSearchClient.productSearchByImage(params);
+  void _searchByCamera() async {
+    var file = await psSearchClient.captureImage();
+    setState(() {
+      _fileName = file?.name;
+    });
+    if (file != null) {
+      _searchByImg(file);
+    }
+  }
+
+  void _searchByImageUpload() async {
+    var file = await psSearchClient.uploadImage();
+    setState(() {
+      _fileName = file?.name;
+    });
+    if (file != null) {
+      _searchByImg(file);
+    }
+  }
+
+  void _searchByImg(file) async {
+    if (_fileName != null) {
+      var response = await psSearchClient.productSearchByImage(file, {});
       setState(() {
         _searchRequestResult = response.body;
       });
     }
-  }
-
-  void _uploadImage() async {
-    _resetState();
-    PlatformFile? file;
-    _fileResult = await FilePicker.platform
-        .pickFiles(type: FileType.image, withReadStream: true);
-    file = _fileResult?.files[0];
-    setState(() {
-      _fileName = file != null ? file.name.toString() : '...';
-    });
-    if (!mounted) return;
-  }
-
-  void _resetState() {
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _fileName = null;
-    });
   }
 
   void _resetSession() async {
@@ -136,7 +132,7 @@ class MyAppState extends State<MyApp> {
 
   Future<void> _sendBatchEvent() async {
     try {
-      List<dynamic> params = jsonDecode(_paramsListController.text)
+      List<Map<String, dynamic>> params = jsonDecode(_paramsListController.text)
           .map((element) => element as Map<String, dynamic>)
           .toList();
       await psSearchClient.sendEvents(_eventController.text, params);
@@ -215,15 +211,16 @@ class MyAppState extends State<MyApp> {
                         child: const Text('Search by image id')),
                     const Divider(thickness: 2, color: Colors.grey, height: 30),
                     ElevatedButton(
-                        onPressed: _uploadImage,
-                        child: const Text('Upload image')),
+                        onPressed: _searchByImageUpload,
+                        child: const Text('Upload search')),
+                    const Padding(padding: EdgeInsets.all(4)),
+                    ElevatedButton(
+                        onPressed: _searchByCamera,
+                        child: const Text('Camera search')),
+                    const Padding(padding: EdgeInsets.all(4)),
                     Text(
                       'Image name: $_fileName',
                     ),
-                    const Padding(padding: EdgeInsets.all(4)),
-                    ElevatedButton(
-                        onPressed: _searchByImg,
-                        child: const Text('Search by image')),
                     const Divider(thickness: 2, color: Colors.grey, height: 30),
                     Text(
                       'Response: $_searchRequestResult',
