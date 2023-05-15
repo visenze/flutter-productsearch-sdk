@@ -55,17 +55,36 @@ Searching by Image can happen in three different ways - by url, id or File.
   var response = await psClient.productSearchByImage(params);
   ```
 
-- Using image file:
+- Using image from gallery:
 
   ```dart
-  var body = {
-    image: imageObjFile
-  };
-
+  var image = await psClient.uploadImage();
   var response = await psClient.productSearchByImage(params);
   ```
 
-> The request parameters for this API can be found at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/search-by-image-api-1).
+- Using image from camera capture:
+
+  ```dart
+  var image = await psClient.captureImage();
+  var response = await psClient.productSearchByImage(params);
+  ```
+
+> Please provide `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` values if you are accessing gallery/camera for image search for iOS devices.
+
+> The request parameters for search API can be found at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/search-by-image-api-1).
+
+#### 3.1.1 Resize settings
+
+By default, we limit the size of the image user upload to 512x512 pixels to balance search latency and search accuracy.
+
+If your image contains fine details such as textile patterns and textures, you can set a larger limit.
+
+```dart
+psClient.widthLimit = 1024;
+psClient.heightLimit = 1024;
+```
+
+To make efficient use the of the memory and network bandwidth of mobile device, the maximum size is set at 1024 x 1024. Any image exceeds the limit will be resized to the limit.
 
 ### 3.2 Recommendationss
 

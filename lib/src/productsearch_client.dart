@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:visenze_tracking_sdk/visenze_tracker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:clock/clock.dart';
@@ -41,19 +42,18 @@ class ProductSearchClient {
     _useStaging = useStaging ?? false;
   }
 
-  Future<http.Response> imageSearch(Map<String, dynamic> searchParams) async {
+  Future<http.Response> imageSearch(
+      XFile? image, Map<String, dynamic> searchParams) async {
     Map<String, dynamic> params = {...searchParams};
     params.addAll(getCommonParams());
     params.addAll(_getAuthParams());
 
     http.Response response;
 
-    if (params['image'] != null) {
-      dynamic file = params['image'];
-      params.remove('image');
+    if (image != null) {
       params = params.map((key, value) => MapEntry(key, value.toString()));
       Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
-      response = await _uploadPost(uri, file);
+      response = await _uploadPost(uri, image);
     } else {
       params = params.map((key, value) => MapEntry(key, value.toString()));
       Uri uri = Uri.https(_getEndpoint(), _pathSearch, params);
@@ -135,26 +135,30 @@ class ProductSearchClient {
   }
 
   Future<http.Response> _get(Uri uri) async {
-    var response = await _httpClient
+    final response = await _httpClient
         .get(uri)
         .timeout(Duration(milliseconds: _timeoutInMs));
     return response;
   }
 
   Future<http.Response> _post(Uri uri) async {
-    var response = await _httpClient
+    final response = await _httpClient
         .post(uri)
         .timeout(Duration(milliseconds: _timeoutInMs));
     return response;
   }
 
-  Future<http.Response> _uploadPost(Uri uri, dynamic objFile) async {
+  Future<http.Response> _uploadPost(Uri uri, XFile image) async {
     final request = http.MultipartRequest('POST', uri);
-    request.files.add(http.MultipartFile(
-        'image', objFile.readStream, objFile.size,
-        filename: objFile.name));
+    final stream = http.ByteStream(image.openRead());
+    stream.cast();
+    final length = await image.length();
+    final multipartFile =
+        http.MultipartFile('image', stream, length, filename: image.name);
 
-    var response =
+    request.files.add(multipartFile);
+
+    final response =
         await request.send().timeout(Duration(milliseconds: _timeoutInMs));
     return http.Response.fromStream(response);
   }

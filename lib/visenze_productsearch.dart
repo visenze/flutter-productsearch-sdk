@@ -1,14 +1,22 @@
 library visenze_productsearch_sdk;
 
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:visenze_productsearch_sdk/src/productsearch_client.dart';
 import 'package:visenze_tracking_sdk/visenze_tracker.dart';
 
 class VisenzeProductSearch {
+  final double _maxWidth = 1024;
+  final double _maxHeight = 1024;
+  double _widthLimit = 512;
+  double _heightLimit = 512;
   final String _appKey;
   final String _placementId;
+  final ImagePicker _picker = ImagePicker();
   late final ProductSearchClient _client;
   late final VisenzeTracker _tracker;
+
+  XFile? _image;
 
   /// Factory for creating [VisenzeProductSearch]
   ///
@@ -49,11 +57,37 @@ class VisenzeProductSearch {
     return _client.lastSuccessQueryId;
   }
 
+  /// Set the width limit for image uploaded by users
+  set widthLimit(double width) {
+    _widthLimit = width > _maxWidth ? _maxWidth : width;
+  }
+
+  /// Set the height limit for image uploaded by users
+  set heightLimit(double height) {
+    _heightLimit = height > _maxHeight ? _maxHeight : height;
+  }
+
   /// Send a request to ViSenze analytics server with event name [action] and provided [queryParams]
   Future<void> sendEvent(
       String action, Map<String, dynamic> queryParams) async {
     final params = {...queryParams}..addAll(_client.getCommonParams());
     await _tracker.sendEvent(action, params);
+  }
+
+  Future<XFile?> captureImage() async {
+    _image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: _widthLimit,
+        maxHeight: _heightLimit);
+    return _image;
+  }
+
+  Future<XFile?> uploadImage() async {
+    _image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: _widthLimit,
+        maxHeight: _heightLimit);
+    return _image;
   }
 
   /// Send a request to ViSenze analytics server with event name [action] and provided params list [queryParamsList]
@@ -69,7 +103,7 @@ class VisenzeProductSearch {
   /// Do an image search with params [searchParams]
   Future<http.Response> productSearchByImage(
       Map<String, dynamic> searchParams) async {
-    return await _client.imageSearch(searchParams);
+    return await _client.imageSearch(_image, searchParams);
   }
 
   /// Do a recommendation search with product id [pid] and optional params [recParams]
