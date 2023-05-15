@@ -13,7 +13,7 @@ class ProductSearchClient {
   static const String _pathSearch = 'v1/product/search_by_image';
 
   static const String _sdk = 'flutter_sdk';
-  static const String _version = '0.0.1-dev.1';
+  static const String _version = '0.0.1-dev.2';
   static const int _defaultTimeout = 15000;
 
   static const String _lastReqidKey = 'visenze_query_id_';
