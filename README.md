@@ -137,6 +137,8 @@ To improve search performance and gain useful data insights, it is recommended t
 
 Currently, we support the following event actions: `product_click`, `product_view`, `add_to_cart`, and `transaction`. However, the action parameter can be an arbitrary string if you want to send custom events.
 
+Some events (for e.g. `product_click` or `product_view`) can require additional parameter like `pid` (product id).
+
 ### 5.1 Set up
 
 We will initialize the event tracker with a tracking ID generated from your app key and placement ID for you.
@@ -182,6 +184,18 @@ psClient.sendEvent('favourite', {
   label: 'custom event label',
   cat: 'visual_search'
 });
+
+// handle success or error
+try {
+  psClient.sendEvent('product_click', {
+    queryId: '<search reqid>',
+    pid: '<your product id>',
+    pos: 1, // product position in Search Results, start from 1
+  });
+  onRequestSuccess(); // handle success
+} catch (errResponse) {
+  onRequestError(errReponse); // handle error
+}
 ```
 
 #### 5.2.2 Batch events
