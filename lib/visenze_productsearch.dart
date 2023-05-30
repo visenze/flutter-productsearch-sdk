@@ -111,7 +111,7 @@ class VisenzeProductSearch {
   VisenzeProductSearch._create(this._appKey, this._placementId);
 
   Future<void> _init({String? uid, bool? useStaging, int? timeout}) async {
-    _tracker = await VisenzeTracker.create('$_appKey:$_placementId', uid: uid);
+    _tracker = await VisenzeTracker.create('$_appKey:$_placementId', uid: uid, useStaging: useStaging);
     _client = await ProductSearchClient.create(
         http.Client(), _appKey, _placementId, _tracker,
         useStaging: useStaging, timeout: timeout);
