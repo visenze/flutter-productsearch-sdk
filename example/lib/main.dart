@@ -16,10 +16,12 @@ class MyAppState extends State<MyApp> {
   String _sid = '<unknown>';
   String _uid = '<unknown>';
   String _trackingRequestResult = '<unknown>';
+  String? _lastQueryId = '<unknown>';
 
   final TextEditingController _pidController = TextEditingController();
   final TextEditingController _imgUrlController = TextEditingController();
   final TextEditingController _imgIdController = TextEditingController();
+  final TextEditingController _queryParamController = TextEditingController();
   final TextEditingController _eventController =
       TextEditingController(text: 'transaction');
   final TextEditingController _paramsController = TextEditingController(
@@ -41,66 +43,19 @@ class MyAppState extends State<MyApp> {
   // Factory is asynchronous, so we put it in an async method.
   void initPS() async {
     psSearchClient =
-        await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
-    psRecClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
+        await VisenzeProductSearch.create('c0a2bd241268ad2f43a8ddd26ca42989', '3347', useStaging: true);
+    psRecClient = await VisenzeProductSearch.create('5e365922c2a316f9bb6ff0be665f06ce', '3350', useStaging: true);
     setState(() {
       _sid = psSearchClient.sessionId;
       _uid = psSearchClient.userId;
+
+      // resize limit --------
+      // psSearchClient.widthLimit = 2048;
+      // psSearchClient.heightLimit = 2048;
     });
   }
 
-  void _searchById() async {
-    var response = await psRecClient.productSearchById(_pidController.text);
-    setState(() {
-      _recRequestResult = response.body;
-    });
-  }
-
-  void _searchByImgUrl() async {
-    Map<String, dynamic> params = {'im_url': _imgUrlController.text};
-    var response = await psSearchClient.productSearchByImage(null, params);
-    setState(() {
-      _searchRequestResult = response.body;
-    });
-  }
-
-  void _searchByImgId() async {
-    Map<String, dynamic> params = {'im_id': _imgIdController.text};
-    var response = await psSearchClient.productSearchByImage(null, params);
-    setState(() {
-      _searchRequestResult = response.body;
-    });
-  }
-
-  void _searchByCamera() async {
-    var file = await psSearchClient.captureImage();
-    setState(() {
-      _fileName = file?.name;
-    });
-    if (file != null) {
-      _searchByImg(file);
-    }
-  }
-
-  void _searchByImageUpload() async {
-    var file = await psSearchClient.uploadImage();
-    setState(() {
-      _fileName = file?.name;
-    });
-    if (file != null) {
-      _searchByImg(file);
-    }
-  }
-
-  void _searchByImg(file) async {
-    if (_fileName != null) {
-      var response = await psSearchClient.productSearchByImage(file, {});
-      setState(() {
-        _searchRequestResult = response.body;
-      });
-    }
-  }
-
+  // ------------- common utils ---------- start --------------
   void _resetSession() async {
     psSearchClient.resetSession();
     setState(() {
@@ -120,10 +75,123 @@ class MyAppState extends State<MyApp> {
     });
   }
 
+  void _resetMsg() {
+    _searchRequestResult = "";
+    _trackingRequestResult = "";
+    _fileName = "";
+    _recRequestResult = "";
+  }
+
+  Map<String, dynamic> _getSearchQueryParam() {
+    Map<String, dynamic> params = {};
+    if(_queryParamController.text.isNotEmpty) {
+      params = jsonDecode(_queryParamController.text);
+    }
+    return params;
+  }
+
+  // ------------- recommendation ---------- start --------------
+  void _searchById() async {
+    _resetMsg();
+    try {
+      Map<String, dynamic> params = _getSearchQueryParam();
+      var response = await psRecClient.productSearchById(_pidController.text, params=params);
+      setState(() {
+        _recRequestResult = response.body;
+        _lastQueryId = psRecClient.lastSuccessQueryId;
+      });
+    } catch (err) {
+      _onRequestError(err);
+    }
+  }
+
+  // ------------- search ---------- start --------------
+  void _searchByImgUrl() async {
+    _resetMsg();
+    try {
+      Map<String, dynamic> params = {'im_url': _imgUrlController.text};
+      params.addAll(_getSearchQueryParam());
+      var response = await psSearchClient.productSearchByImage(null, params);
+      setState(() {
+        _searchRequestResult = response.body;
+        _lastQueryId = psSearchClient.lastSuccessQueryId;
+      });
+    } catch(err) {
+      _onRequestError(err);
+    }
+
+  }
+
+  void _searchByImgId() async {
+    _resetMsg();
+    try {
+      Map<String, dynamic> params = {'im_id': _imgIdController.text};
+      params.addAll(_getSearchQueryParam());
+      var response = await psSearchClient.productSearchByImage(null, params);
+      setState(() {
+        _searchRequestResult = response.body;
+        _lastQueryId = psSearchClient.lastSuccessQueryId;
+      });
+    } catch(err) {
+      _onRequestError(err);
+    }
+  }
+
+  void _searchByCamera() async {
+    _resetMsg();
+    try {
+      var file = await psSearchClient.captureImage();
+      setState(() {
+        _fileName = file?.name;
+      });
+      if (file != null) {
+        _searchByImg(file);
+      }
+    } catch(err) {
+      _onRequestError(err);
+    }
+  }
+
+  void _searchByImageUpload() async {
+    _resetMsg();
+    var file;
+    try {
+      file = await psSearchClient.uploadImage();
+    } catch(err) {
+      _onRequestError(err);
+      return;
+    }
+    setState(() {
+      _fileName = file?.name;
+    });
+    if (file != null) {
+      _searchByImg(file);
+    }
+  }
+
+  void _searchByImg(file) async {
+    _resetMsg();
+    try {
+      if (_fileName != null) {
+        var response = await psSearchClient.productSearchByImage(file, _getSearchQueryParam());
+        setState(() {
+          _searchRequestResult = response.body;
+          _lastQueryId = psSearchClient.lastSuccessQueryId;
+        });
+      }
+    } catch(err) {
+      _onRequestError(err);
+    }
+  }
+
+  // ------------- tracking ---------- start --------------
+
   Future<void> _sendEvent() async {
     try {
+      Map<String, dynamic> params = jsonDecode(_paramsController.text);
+      params["queryId"] = _lastQueryId;
       await psSearchClient.sendEvent(
-          _eventController.text, jsonDecode(_paramsController.text));
+          _eventController.text, params);
       _onRequestSuccess();
     } catch (err) {
       _onRequestError(err);
@@ -165,6 +233,16 @@ class MyAppState extends State<MyApp> {
                 padding: const EdgeInsets.all(15),
                 child: ListView(
                   children: <Widget>[
+                    Text(
+                      'last query id: $_lastQueryId',
+                    ),
+                    const Padding(padding: EdgeInsets.all(20)),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: "Query params",
+                      ),
+                      controller: _queryParamController,
+                    ),
                     TextField(
                       decoration: const InputDecoration(
                         labelText: "Product id",
@@ -179,16 +257,29 @@ class MyAppState extends State<MyApp> {
                     Text(
                       'Response: $_recRequestResult',
                     ),
+                    const Padding(padding: EdgeInsets.all(4)),
+                    Text("Error: $_trackingRequestResult"),
                   ],
                 ),
               ),
             ),
             SingleChildScrollView(
               child: Container(
-                height: 600,
+                height: 900,
                 padding: const EdgeInsets.all(15),
                 child: ListView(
                   children: <Widget>[
+                    Text(
+                      'last query id: $_lastQueryId',
+                    ),
+                    const Padding(padding: EdgeInsets.all(20)),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: "Query params",
+                      ),
+                      controller: _queryParamController,
+                    ),
+                    const Padding(padding: EdgeInsets.all(20)),
                     TextField(
                       decoration: const InputDecoration(
                         labelText: "Image url",
@@ -225,6 +316,9 @@ class MyAppState extends State<MyApp> {
                     Text(
                       'Response: $_searchRequestResult',
                     ),
+                    const Divider(thickness: 2, color: Colors.grey, height: 30),
+                    const Padding(padding: EdgeInsets.all(4)),
+                    Text("Error: $_trackingRequestResult"),
                   ],
                 ),
               ),
@@ -234,6 +328,10 @@ class MyAppState extends State<MyApp> {
               padding: const EdgeInsets.all(15),
               child: ListView(
                 children: <Widget>[
+                  Text(
+                    'last query id: $_lastQueryId',
+                  ),
+                  const Padding(padding: EdgeInsets.all(4)),
                   Text(
                     'Session id: $_sid',
                   ),
