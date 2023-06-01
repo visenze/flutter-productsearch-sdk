@@ -339,7 +339,7 @@ psClient.sendEvents('transaction',
 
 ### 6.3 Event parameters
 
-For list of all event parameter and their explanations, please refer to this [doc](https://ref-docs.visenze.com/reference/event-parameters)
+For list of all event parameter and their explanations, please refer to [this doc](https://ref-docs.visenze.com/reference/event-parameters)
 
 Below we list down the most basic parameters and how to retrieve them.
 
