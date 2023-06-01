@@ -150,7 +150,7 @@ var response = await psClient.productSearchById(productId, parameters);
 
 ### 4.1 Automatic object detection
 
-The Search API is smart to detect the objects present in the query image and suggest the best matched product type to run the search on.
+The Search API is able to detect the objects present in the query image and suggest the best matched product type to run the search on.
 
 Use `detection` or `point` parameters to suggest the particular objects of interest in the query image. `box` and `point` parameters are not allowed to appear in the same request.
 
