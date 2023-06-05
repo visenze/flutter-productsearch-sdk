@@ -5,11 +5,41 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](/LICENSE)
 [![Null Safety](https://img.shields.io/badge/-Null%20Safety-blue.svg)]()
 
+## Table of Contents
+
+- [visenze_productsearch_sdk](#visenze_productsearch_sdk)
+  - [Table of Contents](#table-of-contents)
+  - [1. Overview](#1-overview)
+  - [2. Set up](#2-set-up)
+  - [3. APIs](#3-apis)
+    - [3.1 Search by image](#3.1-search-by-image)
+    - [3.2 Recommendations](#3.2-recommendations)
+  - [4. Advanced search](#4-advanced-search)
+    - [4.1 Automatic object detection](#4.1-automatic-object-detection)
+    - [4.2 Filters and text filters](#4.2-filters-and-text-filters)
+    - [4.3 Facets](#4.3-facets)
+    - [4.4 Attributes retrieval](#4.4-attributes-retrieval)
+  - [5. Search results](#5-search-results)
+  - [6. Event tracking](#6-event-tracking)
+    - [6.1 Set up](#6.1-set-up)
+    - [6.2 Send events](#6.2-send-events)
+    - [6.3 Event parameters](#6.3-event-parameters)
+
 ## 1. Overview
 
 [The ViSenze Discovery Suite](https://console.visenze.com/) provides your customers a better and more intuitive product search and discovery experience by helping them search, navigate and interact with products more easily. ViSenze latest Product Search & Recommendations API is included in this SDK. Please refer to online [docs](https://ref-docs.visenze.com/reference/introduction-to-search-and-recommendation-api) for more information.
 
 ## 2. Set up
+
+### 2.1 Install
+
+Run command
+
+```
+flutter get visenze_productsearch_sdk
+```
+
+### 2.2 Start
 
 Before you can start using the SDK, you will need to set up the SDK keys. Most of these keys can be found in your account's [dashboard](https://console.visenze.com/).
 
@@ -19,12 +49,17 @@ First, take a look at the table below to understand what each key represents:
 | :----------- | :--------- | :------------------------------------------------------------------------------------------------------------ |
 | app_key      | Compulsory | All SDK functions depends on a valid app_key being set. The app key also limits the API features you can use. |
 | placement_id | Compulsory | Your placement id.                                                                                            |
-| timeout      | Optional   | Timeout for APIs in ms. Defaulted to 15000                                                                    |
+| timeout      | Optional   | Timeout for APIs in ms. Defaulted to 15000.                                                                   |
+| uid          | Optional   | The customer user id. If not provided, this will be auto generated .                                          |
 
 To create a ProductSearch instance:
 
 ```dart
 const psClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
+```
+
+```dart
+const psClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID', uid: 'CUSTOMER_UID', timeout: TIMEOUT_IN_MS);
 ```
 
 ## 3. APIs
@@ -111,7 +146,91 @@ var response = await psClient.productSearchById(productId, parameters);
 
 > The request parameters for this API can be found at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/visually-similar-api).
 
-## 4. Search results
+## 4. Advanced search
+
+### 4.1 Automatic object detection
+
+The Search API is able to detect the objects present in the query image and suggest the best matched product type to run the search on.
+
+Use `detection` or `point` parameters to suggest the particular objects of interest in the query image. `box` and `point` parameters are not allowed to appear in the same request.
+
+- Example
+
+  ```dart
+  var params = {
+    im_url: 'your-image-url',
+    detection: 'Top' // only detect objects in the image with product_type `Top`
+    detection_limit: 5 // only detect up to a maximum of 5 objects in the image
+  };
+
+  var response = await psClient.productSearchByImage(null, params);
+  ```
+
+> For more details, please refer to the Automatic Object Detection document at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/automatic-object-detection).
+
+### 4.2 Filters and text filters
+
+To filter search results based on product metadata, provide a map of metadata key-values in the filters or text_filters parameters.
+
+| Param        | Filter query behaviour                                                                                      | Example                                                                                                                                                                                                                                                         |
+| :----------- | :---------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filters      | The filter queries are treated as exact match conditions. Applies to String, Integer and Float type fields. | `filters=brand:my_brand` means the brand (String) value of the search results must be strictly equal to “my_brand”. `filters=price:10,199` means the price (Integer) value of the search results must be strictly within the range between 10 to 199 inclusive. |
+| text_filters | The filter queries are treated as partial match filters. Only applies to String type fields.                | `text_flters=brand:my_brand` means the brand value of the search results can be any values containing “my_brand”, such as “my_brand >> sub brand”.                                                                                                              |
+
+- Example
+
+```dart
+var productId = 'your-product-id';
+
+var parameters = {
+  filters: ['brand:my_brand', 'price:50:200'] // filter all products from my_brand AND price between 50-200 currency unit
+};
+
+var response = await psClient.productSearchById(productId, parameters);
+```
+
+> For more filters syntax and rules, please refer to the filters section at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/filters-and-text-filters)
+
+### 4.3 Facets
+
+Facets are values to filters on from results list. You can get the facets by sending a list of fields to enable faceting on.
+
+- Example
+
+```dart
+var productId = 'your-product-id';
+
+var parameters = {
+  facets: 'gender, brand, price', // return possible filterable metadata fields for gender, brand, price,
+  facets_limit: 10 // return 10 values for each facet
+};
+
+var response = await psClient.productSearchById(productId, parameters);
+```
+
+For more details, please refer to Facets section at [ViSenze Documentation Hub](https://ref-docs.visenze.com/reference/facets)
+
+### 4.4 Attributes retrieval
+
+To retrieve metadata from your API call, provide the list of product metadata keys to the `attrs_to_get` (field list) property.
+
+- Example
+
+```dart
+var productId = 'your-product-id';
+
+var parameters = {
+  attrs_to_get: 'gender, price, brand' // return gender, price and brand metadata in the result
+};
+
+var response = await psClient.productSearchById(productId, parameters);
+```
+
+> Only indexed attributes can be retrieved
+
+> Note that only the indexed attributes can be retrieved with this parameter. You may go the the Edit App page to review which attributes have been included in the app index.
+
+## 5. Search results
 
 This sdk use the [http](https://pub.dev/packages/http) library for making API request. The response is a http [Response](https://pub.dev/documentation/http/latest/http/Response-class.html).
 
@@ -131,7 +250,7 @@ if (response.statusCode == 200) {
 }
 ```
 
-## 5. Event tracking
+## 6. Event tracking
 
 To improve search performance and gain useful data insights, it is recommended to send user interactions (actions) with the visual search results.
 
@@ -139,13 +258,13 @@ Currently, we support the following event actions: `product_click`, `product_vie
 
 Some events (for e.g. `product_click` or `product_view`) can require additional parameter like `pid` (product id).
 
-### 5.1 Set up
+### 6.1 Set up
 
 We will initialize the event tracker with a tracking ID generated from your app key and placement ID for you.
 
-### 5.2 Send events
+### 6.2 Send events
 
-#### 5.2.1 Single event
+#### 6.2.1 Single event
 
 User action can be sent through an event handler. Register an event handler to the element in which the user will interact.
 
@@ -218,9 +337,13 @@ psClient.sendEvents('transaction',
 );
 ```
 
-### 5.3 Getting event and tracking parameters
+### 6.3 Event parameters
 
-#### 5.3.1 Search query Id
+For list of all event parameter and their explanations, please refer to [this doc](https://ref-docs.visenze.com/reference/event-parameters)
+
+Below we list down the most basic parameters and how to retrieve them.
+
+#### 6.3.1 Search query Id
 
 All events sent to Visenze Analytics server require the search query ID (the `reqid`) found in the search results response as part of the request parameter.
 
@@ -240,13 +363,13 @@ You can also directly get the query id of the last successful search request per
 var queryId = psClient.lastSuccessQueryId;
 ```
 
-#### 5.3.2 Session Id
+#### 6.3.2 Session Id
 
 ```dart
 var sessionId = psClient.sessionId;
 ```
 
-#### 5.3.3 User Id
+#### 6.3.3 User Id
 
 ```dart
 var userId = psClient.userId;
