@@ -13,7 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.5
+  http: ^1.2.2
   shared_preferences: ^2.0.18
   visenze_tracking_sdk: ^1.0.1
   clock: ^1.1.1
