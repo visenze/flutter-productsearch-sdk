@@ -15,7 +15,7 @@ dependencies:
     sdk: flutter
   http: ^0.13.5
   shared_preferences: ^2.0.18
-  visenze_tracking_sdk: ^0.0.4-dev.1
+  visenze_tracking_sdk: ^1.0.1
   clock: ^1.1.1
   image_picker: ^0.8.7
 
