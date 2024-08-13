@@ -43,8 +43,8 @@ class MyAppState extends State<MyApp> {
   // Factory is asynchronous, so we put it in an async method.
   void initPS() async {
     psSearchClient =
-        await VisenzeProductSearch.create('c0a2bd241268ad2f43a8ddd26ca42989', '3347', useStaging: true);
-    psRecClient = await VisenzeProductSearch.create('5e365922c2a316f9bb6ff0be665f06ce', '3350', useStaging: true);
+        await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
+    psRecClient = await VisenzeProductSearch.create('APP_KEY', 'PLACEMENT_ID');
     setState(() {
       _sid = psSearchClient.sessionId;
       _uid = psSearchClient.userId;
