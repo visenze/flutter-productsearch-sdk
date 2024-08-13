@@ -1,3 +1,3 @@
 ## 0.0.1
 
-* First API implementation
+- First API implementation
