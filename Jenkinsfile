@@ -2,13 +2,14 @@
 
 pipeline {
   agent {
-    label "${params.AGENT_LABEL ?: 'pod'}"
+    label "${params.AGENT_LABEL ?: 'build-amd64'}"
   }
 
   stages {
     stage('Test') {
       steps {
         script {
+          sh 'git config --global --add safe.directory /usr/local/bin/flutter'
           withEnv(["PATH=${tool('flutter')}:$PATH"]) {
             sh 'flutter pub get'
             sh 'flutter test'
